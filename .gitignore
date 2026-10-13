@@ -1,0 +1,82 @@
+# ============================================================
+# morphodomains — Figure generation code for the spatial
+# transcriptomics manuscript (Bellaiche Lab, Institut Curie)
+# ============================================================
+
+# ----------------------------------------------------------
+# Data (not bundled — set MORPHODOMAINS_DATA env var)
+# ----------------------------------------------------------
+data/
+
+# ----------------------------------------------------------
+# Documentation build artifacts
+# ----------------------------------------------------------
+docs/_build/
+docs/notebooks/
+
+# ----------------------------------------------------------
+# Generated outputs
+# ----------------------------------------------------------
+/figures/
+figures_output/
+figures_raw/
+figures_raw_test/
+optimisation_novosparc_output/
+
+# ----------------------------------------------------------
+# Python artifacts
+# ----------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+*.egg
+.eggs/
+build/
+dist/
+*.manifest
+*.spec
+.installed.cfg
+MANIFEST
+output/
+# ----------------------------------------------------------
+# Testing / coverage
+# ----------------------------------------------------------
+.pytest_cache/
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+
+# ----------------------------------------------------------
+# IDE, editor, and tool config files
+# ----------------------------------------------------------
+.vscode/
+.cursor/
+.DS_Store
+*.swp
+*.swo
+*~
+.idea/
+~$*
+
+# ----------------------------------------------------------
+# Environment / packaging
+# ----------------------------------------------------------
+.env
+.venv
+env/
+venv/
+ENV/
+.Python
+*.so
+__pypackages__/
+
+# Notebook outputs (regenerable)
+notebooks/notebook_outputs/

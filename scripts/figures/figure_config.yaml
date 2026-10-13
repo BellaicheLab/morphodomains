@@ -1,0 +1,2177 @@
+# Figure Configuration
+#
+#
+# Usage:
+#   python scripts/figures/generate.py                  # Run all enabled
+#   python scripts/figures/generate.py --figure grn     # Run figure_grn only
+#   python scripts/figures/generate.py --list           # List all panels
+#
+# Panel options:
+#   display: true/false  — open interactive viewer (matplotlib plt.show / napari)
+#   save: true/false     — write exports to disk (default: true). Set save: false
+#                          with display: true to preview without writing files.
+#
+# ---------------------------------------------------------------------------
+# Manuscript Figure Mapping
+# ---------------------------------------------------------------------------
+#   Fig 1: figure_flow_deformation
+#   Fig 2: figure_morphodynamic_domains
+#   Fig 3: figure_spatial_transcriptome
+#   Fig 4: figure_grn
+#   Fig 5: figure_morphodynamics_comparison, figure_apoptosis_compression,
+#          figure_delamination_analysis
+
+# ---------------------------------------------------------------------------
+# Paths
+# ---------------------------------------------------------------------------
+paths:
+  # --- Workspace & output ---
+  # "__auto__" is resolved at runtime by generate.py to MORPHODOMAINS_DATA
+  base_workspace: "__auto__"
+  output_base: "${base_workspace}/figures"
+
+  # --- Zarr repositories (movies & averages) ---
+  movie_animal_path: "${base_workspace}/data/zarr/210507_vi_pupa1.zarr"
+  averages_241002_eulerian: "${base_workspace}/data/zarr/averages_v3/241002_eulerian"
+  averages_240920_lagrangian: "${base_workspace}/data/zarr/averages_v3/240920_lagrangian"
+  averages_pyap_tolloi: "${base_workspace}/data/zarr/averages_v3/average_tolloi_pyap.zarr"
+  averages_pyap_vi: "${base_workspace}/data/zarr/averages_v3/average_vi_pyap.zarr"
+  # same store as movie_animal_path: holds the Tollo:GFP ROIs (figure_tollo_gfp)
+  ref_zarr_pyap: "${base_workspace}/data/zarr/210507_vi_pupa1.zarr"
+  # atlas gene stores + derived common-frame gene atlas (figure_gene_atlas)
+  zarr_atlases: "${base_workspace}/data/zarr_atlases/*/*.zarr"
+  gene_atlas_base: "${base_workspace}/data/gene_atlas"
+
+  # --- PIV results ---
+  results_piv_base: "${base_workspace}/data/piv"
+
+  # --- CSV / tabular data ---
+  macrochaete_csv: "${base_workspace}/data/morphology/macrochaete.csv"
+  atlas_validation_txt: "${base_workspace}/data/morphology/atlas_validation.txt"
+
+  # --- h5ad / single-cell sequencing ---
+  sc_single_cell_h5ad: "${base_workspace}/data/single_cell/all_seurat_annotated_15_APF_wt.h5ad"
+  sc_raw_counts_csv: "${base_workspace}/data/single_cell/epi_RNA_counts.csv"
+  sc_raw_counts_csv_all_cells: "${base_workspace}/data/single_cell/all_raw_counts.csv"
+
+  # --- GEP results ---
+  gep_results_base: "${base_workspace}/data/gep_results"
+
+
+  # --- Tollo:GFP registered zarr animals ---
+  tollo_gfp_15h_zarr: "${base_workspace}/data/tollo_gfp/TolloGFP_15h.zarr"
+  tollo_gfp_20h_zarr: "${base_workspace}/data/tollo_gfp/TolloGFP_20h.zarr"
+  tollo_gfp_25h_zarr: "${base_workspace}/data/tollo_gfp/TolloGFP_25h.zarr"
+  tollo_gfp_28h_zarr: "${base_workspace}/data/tollo_gfp/TolloGFP_28h.zarr"
+
+  # --- GRN / SCENIC resources ---
+  scenic_tf_list: "${base_workspace}/data/grn/TF_list.txt"
+  grn_adjacency_dir: "${base_workspace}/data/grn/adjacency"
+
+# ---------------------------------------------------------------------------
+# Matplotlib Style
+# ---------------------------------------------------------------------------
+style:
+  # Typography — editable SVG text for Illustrator
+  svg.fonttype: "none"
+  font.family: "sans-serif"
+  font.sans-serif: ["Arial"]
+
+  # Bold/italic runs inside a label go through mathtext; point it at Arial so it
+  # stays live text rather than DejaVu glyph outlines.
+  mathtext.fontset: "custom"
+  mathtext.rm: "Arial"
+  mathtext.bf: "Arial:bold"
+  mathtext.it: "Arial:italic"
+
+  # Resolution
+  savefig.dpi: 600
+  savefig.transparent: true
+
+  # Font sizes (pt)
+  xtick.labelsize: 5
+  ytick.labelsize: 5
+  axes.labelsize: 6
+  axes.titlesize: 9
+  figure.titlesize: 9
+  legend.fontsize: 5
+
+  # Figure size unit (mm) — all presets derive from this
+  unit_mm: 60
+
+  # Named presets: "rows x cols" -> [width_in, height_in]
+  figsize_presets:
+    "0.5x0.5": [1.18, 1.18]
+    "0.5x1": [2.36, 1.18]
+    "1x1": [2.36, 2.36]
+    "1x2": [4.72, 2.36]
+    "1x3": [7.09, 2.36]
+    "1x4": [9.45, 2.36]
+    "1.5x1.5": [3.54, 3.54]
+    "2x1": [2.36, 4.72]
+    "2x2": [4.72, 4.72]
+    "2x3": [7.09, 4.72]
+    "3x1": [2.36, 7.09]
+    "3x2": [4.72, 7.09]
+    "3x3": [7.09, 7.09]
+
+# ---------------------------------------------------------------------------
+# Napari viewer defaults
+# ---------------------------------------------------------------------------
+napari:
+  window_size: [900, 554]
+  theme: "light"
+
+# ---------------------------------------------------------------------------
+# Quick enable/disable (overrides per-figure 'enabled' keys below)
+# ---------------------------------------------------------------------------
+enabled_figures:
+  figure_flow_deformation: true   # Velocity and deformation tensor maps  [Fig 1]
+  figure_morphodynamic_domains: true   # PCA and clustering  [Fig 2]
+  figure_spatial_transcriptome: true   # Spatial transcriptome reconstruction  [Fig 3]
+  figure_grn: true   # TF specificity and GRN inference  [Fig 4]
+  figure_morphodynamics_comparison: true   # Moran / LISA spatial autocorrelation  [Fig 5]
+  figure_apoptosis_compression: true   # Lagrangian apoptosis and compression  [Fig 5]
+  figure_delamination_analysis: true   # Lagrangian apoptosis (pyanimalprocessing)  [Fig 5]
+  figure_tollo_gfp: true               # Tollo:GFP fluorescence with ROIs
+  figure_clustering_stability: true    # Clustering stability vs #PCs (consensus)
+  figure_clustering_temporal: true     # Clustering robustness to time pooling
+  figure_clustering_spatiotemporal: true  # Clustering under space+time contiguity
+  figure_atlas_size: true              # vGEP reconstruction vs. atlas size
+  figure_gene_atlas: true              # common-frame gene atlas (pyanimalprocessing)
+  figure_neck_archetype_spread: true   # neck-landmark atlas agreement
+
+# ---------------------------------------------------------------------------
+# Figures
+# ---------------------------------------------------------------------------
+figures:
+  # =========================================================================
+  # Velocity and deformation profiles  [Fig 1]
+  # =========================================================================
+  figure_flow_deformation:
+    description: "Tissue velocity (PIV) and deformation rate tensor maps on the Drosophila pupal notum (~16-30h APF)"
+    enabled_panels:
+      velocity_profile: true
+      velocity_maps: true
+      deformation_maps: true
+
+    output_dir: "fig_flow_deformation"
+    masks:
+      - {center: [-10.8, 461.3], radius: 100}
+      - {center: [-15.7, 667.0], radius: 100}
+      - {center: [-21.6, 854.0], radius: 100}
+      - {center: [-18.6, 1068.5], radius: 100}
+      - {center: [-16.7, 1256.4], radius: 100}
+      - {center: [-14.7, 1466.0], radius: 100}
+      - {center: [-13.7, 1608.7], radius: 100}
+      - {center: [-13.7, 1709.1], radius: 100}
+      - {center: [-15.7, 1863.6], radius: 100}
+      - {center: [-17.6, 1994.5], radius: 100}
+      - {center: [-15.7, 2141.1], radius: 100}
+      - {center: [-15.7, 2331.0], radius: 100}
+      - {center: [-19.6, 2539.6], radius: 100}
+      - {center: [-17.6, 2724.6], radius: 100}
+      - {center: [-19.6, 2918.5], radius: 100}
+      - {center: [-23.6, 3073.0], radius: 100}
+      - {center: [-17.6, 3173.4], radius: 100}
+      - {center: [-19.6, 3309.2], radius: 100}
+      - {center: [-19.6, 3429.2], radius: 100}
+      - {center: [783.9, 2411.5], radius: 100, frames: [52, 53]} # Midline and outlier points, masked for display only
+          # Spatial masks: [{center: [y, x], radius: N, frames: [start, end]}]
+    pick_masks: false   # Set true to enable interactive mask picker (press 'E' to export)
+    panels:
+      velocity_profile:
+        kind: matplotlib
+        description: "Average tissue flow velocity profile"
+        exports:
+          default:
+            path: "velocity_profile"
+        display: false
+        save: true
+      velocity_maps:
+        kind: napari
+        scene: build_velocity_scene
+        description: "Velocity tensor maps at 3 timepoints"
+        display: false
+        save: true
+        exports:
+          velocity_maps_a:
+            enabled: true
+            frames: 46
+            path: "spatial_maps/velocity_f46.svg"
+            layers:
+              - "raw"
+              - "scale legend"
+              - "quantity legend"
+              - "median time legend"
+              - "scale bar"
+              - "Velocity"
+              - "median time legend"
+              - "points_data (shapes)"
+          velocity_maps_b:
+            enabled: true
+            frames: 94
+            path: "spatial_maps/velocity_f94.svg"
+            layers:
+              - "raw"
+              - "scale legend"
+              - "quantity legend"
+              - "median time legend"
+              - "scale bar"
+              - "Velocity"
+              - "median time legend"
+              - "points_data (shapes)"
+          velocity_maps_c:
+            enabled: true
+            frames: 142
+            path: "spatial_maps/velocity_f142.svg"
+            layers:
+              - "raw"
+              - "scale legend"
+              - "quantity legend"
+              - "median time legend"
+              - "scale bar"
+              - "Velocity"
+              - "median time legend"
+          velocity_movie:
+            enabled: false
+            frames: 22:167:1
+            path: "movies/velocity.mp4"
+            fps: 10
+            layers:
+              - "raw"
+              - "scale legend"
+              - "quantity legend"
+              - "median time legend"
+              - "scale bar"
+              - "Velocity"
+              - "median time legend"
+          raw_movie:
+            enabled: false
+            frames: 22:167:1
+            path: "movies/raw.mp4"
+            fps: 10
+            layers:
+              - "raw"
+              - "median time legend"
+      deformation_maps:
+        kind: napari
+        scene: build_deformation_scene
+        description: "Deformation tensor maps at 3 timepoints"
+        display: false
+        save: true
+        exports:
+          deformation_maps_a:
+            enabled: true
+            frames: 46
+            path: "spatial_maps/deformation_f46.svg"
+            layers:
+              - "raw"
+              - "scale legend"
+              - "quantity legend"
+              - "median time legend"
+              - "scale bar scalar (shapes)"
+              - "positive_Deformation rate (shapes)"
+              - "negative_Deformation rate (shapes)"
+              - "Deformation rate_positive"
+              - "median time legend"
+              - "points_data (shapes)"
+          deformation_maps_b:
+            enabled: true
+            frames: 94
+            path: "spatial_maps/deformation_f94.svg"
+            layers:
+              - "raw"
+              - "scale legend"
+              - "quantity legend"
+              - "median time legend"
+              - "scale bar scalar (shapes)"
+              - "positive_Deformation rate (shapes)"
+              - "negative_Deformation rate (shapes)"
+              - "Deformation rate_positive"
+              - "median time legend"
+              - "points_data (shapes)"
+          deformation_maps_c:
+            enabled: true
+            frames: 142
+            path: "spatial_maps/deformation_f142.svg"
+            layers:
+              - "raw"
+              - "scale legend"
+              - "quantity legend"
+              - "median time legend"
+              - "scale bar scalar (shapes)"
+              - "positive_Deformation rate (shapes)"
+              - "negative_Deformation rate (shapes)"
+              - "Deformation rate_positive"
+              - "median time legend"
+              - "points_data (shapes)"
+          deformation_movie:
+            enabled: false
+            frames: 22:167:1
+            path: "movies/deformation.mp4"
+            fps: 10
+            layers:
+              - "raw"
+              - "scale legend"
+              - "quantity legend"
+              - "median time legend"
+              - "scale bar scalar (shapes)"
+              - "scale bar"
+              - "positive_Deformation rate (shapes)"
+              - "negative_Deformation rate (shapes)"
+              - "median time legend"
+
+  # =========================================================================
+  # Morphogenetic PCA and clustering  [Fig 2]
+  # =========================================================================
+  figure_morphodynamic_domains:
+    description: "Morphogenetic PCA (30 features = 15 quantities x 2 timepoints) and Ward hierarchical clustering (k=2..13, spatial connectivity) on the pupal notum"
+    enabled_panels:
+      pca_explained_variance: true
+      pca_loadings_combined: true
+      spatial_pca_maps: true
+      dendrogram_5: true
+      dendrogram_13: true
+      cluster_map_5: true
+      cluster_map_13_greyed: true
+      cluster_map_13_full: true
+      cluster_maps_all: true
+      silhouette_scores: true
+      heatmap_5: true
+      heatmap_2: true
+      heatmap_13: true
+      heatmap_aggregated: true
+      boxplots_k2: true
+      boxplots_k5: true
+      cluster_property_maps: true
+      spatial_ER: true
+      spatial_CellIaniso: true
+      spatial_dnA: true
+      spatial_dnD: true
+      spatial_EG: true
+      spatial_EA: true
+      spatial_ED: true
+      spatial_ES: true
+      spatial_CellArea: true
+      spatial_U: true
+      spatial_Epsilon: true
+
+    output_dir: "fig_morphodynamic_domains"
+    regenerate_cache: false
+    masks:
+      - {center: [-10.8, 461.3], radius: 100}
+      - {center: [-15.7, 667.0], radius: 100}
+      - {center: [-21.6, 854.0], radius: 100}
+      - {center: [-18.6, 1068.5], radius: 100}
+      - {center: [-16.7, 1256.4], radius: 100}
+      - {center: [-14.7, 1466.0], radius: 100}
+      - {center: [-13.7, 1608.7], radius: 100}
+      - {center: [-13.7, 1709.1], radius: 100}
+      - {center: [-15.7, 1863.6], radius: 100}
+      - {center: [-17.6, 1994.5], radius: 100}
+      - {center: [-15.7, 2141.1], radius: 100}
+      - {center: [-15.7, 2331.0], radius: 100}
+      - {center: [-19.6, 2539.6], radius: 100}
+      - {center: [-17.6, 2724.6], radius: 100}
+      - {center: [-19.6, 2918.5], radius: 100}
+      - {center: [-23.6, 3073.0], radius: 100}
+      - {center: [-17.6, 3173.4], radius: 100}
+      - {center: [-19.6, 3309.2], radius: 100}
+      - {center: [-19.6, 3429.2], radius: 100} # Midline and outlier points, masked for display only
+      - {center: [783.9, 2411.5], radius: 100, frames: [52, 53]}
+      # (the array used for analysis goes through a different pass)
+    outputs:
+      cleaned_clusters:
+        enabled: true
+        path: "clustering/cleaned_clusters.csv"
+        description: "Cleaned cluster assignments for k=2..13 (used by figure_grn)"
+      cluster_labels_5:
+        enabled: true
+        path: "clustering/cluster_labels_5.csv"
+        description: "5-cluster labels from Ward dendrogram (used by figure_grn)"
+      pca_scores:
+        enabled: true
+        path: "pca/pca_scores.csv"
+        description: "PCA scores (first 13 PCs) for cross-figure use (figure_spatial_transcriptome)"
+    panels:
+      # --- PCA panels ---
+      pca_explained_variance:
+        kind: matplotlib
+        description: "Variance barplot + cumulative line"
+        exports:
+          default:
+            path: "pca/explained_variance"
+        display: false
+      pca_loadings_combined:
+        kind: matplotlib
+        display: false
+        description: "Feature importance barplots for PC1 & PC2"
+      spatial_pca_maps:
+        kind: matplotlib
+        display: false
+        description: "Spatial maps of first two principal components"
+      # --- Clustering panels ---
+      dendrogram_5:
+        kind: matplotlib
+        description: "5-cluster dendrogram"
+        exports:
+          default:
+            path: "dendrograms/dendrogram_5"
+        display: false
+      dendrogram_13:
+        kind: matplotlib
+        description: "13-cluster dendrogram (greyed highlights)"
+        exports:
+          default:
+            path: "dendrograms/dendrogram_13"
+        display: false
+      cluster_map_5:
+        kind: matplotlib
+        description: "Spatial map of 5 clusters"
+        exports:
+          default:
+            path: "cluster_maps/cluster_map_5"
+        display: false
+      cluster_map_13_greyed:
+        kind: matplotlib
+        description: "Spatial map of 13 clusters (highlighted)"
+        exports:
+          default:
+            path: "cluster_maps/cluster_map_13"
+        display: false
+      cluster_map_13_full:
+        kind: matplotlib
+        description: "Spatial map of 13 clusters, each in its own colour"
+        exports:
+          default:
+            path: "cluster_maps/cluster_map_13_full"
+        display: false
+      cluster_maps_all:
+        kind: matplotlib
+        display: false
+        description: "Spatial maps for all k=2..13 clusterings"
+      silhouette_scores:
+        kind: matplotlib
+        description: "Silhouette score vs number of clusters"
+        exports:
+          default:
+            path: "clustering/silhouette_plot"
+        display: false
+      # --- Heatmap panels ---
+      heatmap_5:
+        kind: matplotlib
+        description: "5-cluster z-score clustermap"
+        exports:
+          default:
+            path: "heatmaps/heatmap_5"
+        display: false
+      heatmap_2:
+        kind: matplotlib
+        description: "2-cluster z-score clustermap"
+        exports:
+          default:
+            path: "heatmaps/heatmap_2"
+        display: false
+      heatmap_13:
+        kind: matplotlib
+        description: "13-cluster z-score clustermap, all clusters coloured"
+        exports:
+          default:
+            path: "heatmaps/heatmap_13"
+        display: false
+      heatmap_aggregated:
+        kind: matplotlib
+        description: "Aggregated heatmap from greyed 13-cluster analysis"
+        exports:
+          default:
+            path: "heatmaps/heatmap_aggregated"
+        display: false
+      # --- Distribution panels ---
+      boxplots_k2:
+        kind: matplotlib
+        display: false
+        description: "Box plots for 2-cluster scenario (1 per property)"
+      boxplots_k5:
+        kind: matplotlib
+        display: false
+        description: "Box plots for 5-cluster scenario (1 per property)"
+      cluster_property_maps:
+        kind: matplotlib
+        display: false
+        description: "Spatial maps of cluster-mean z-scored properties (k x prop x time)"
+      # --- Spatial tensor maps (napari) ---
+      spatial_ER:
+        kind: napari
+        scene: build_spatial_ER_scene
+        description: "Spatial tensor map of ER (rearrangement contribution)"
+        display: false
+        save: true
+        exports:
+          frame_94:
+            path: "spatial_maps/ER_f94.svg"
+            frames: 94
+            layers:
+              - "outline"
+              - "scale legend"
+              - "quantity legend"
+              - "median time legend"
+              - "scale bar"
+              - "R_positive"
+              - "median time legend"
+              - "points_data (shapes)"
+          frame_146:
+            path: "spatial_maps/ER_f146.svg"
+            frames: 146
+            layers:
+              - "outline"
+              - "scale legend"
+              - "quantity legend"
+              - "median time legend"
+              - "scale bar"
+              - "R_positive"
+              - "median time legend"
+              - "points_data (shapes)"
+          movie:
+            enabled: false
+            path: "movies/ER.mp4"
+            frames: 22:167:1
+            fps: 10
+            layers:
+              - "outline"
+              - "scale legend"
+              - "quantity legend"
+              - "median time legend"
+              - "scale bar scalar (shapes)"
+              - "scale bar scalar (shapes)"
+              - "scale bar"
+              - "positive_R (shapes)"
+              - "negative_R (shapes)"
+              - "R_positive"
+              - "median time legend"
+      spatial_CellIaniso:
+        kind: napari
+        scene: build_spatial_CellIaniso_scene
+        description: "Cell anisotropy spatial map"
+        display: false
+        save: true
+        exports:
+          frame_94:
+            path: "spatial_maps/CellIaniso_f94.svg"
+            frames: 94
+            layers:
+              - "outline"
+              - "scale legend"
+              - "quantity legend"
+              - "median time legend"
+              - "scale bar scalar (shapes)"
+              - "scale bar scalar (shapes)"
+              - "scale bar scalar (shapes)"
+              - "scale bar scalar (shapes)"
+              - "positive_Cell anisotropy (shapes)"
+              - "negative_Cell anisotropy (shapes)"
+              - "positive_Cell anisotropy (shapes)"
+              - "negative_Cell anisotropy (shapes)"
+              - "median time legend"
+              - "points_data (shapes)"
+          frame_146:
+            path: "spatial_maps/CellIaniso_f146.svg"
+            frames: 146
+            layers:
+              - "outline"
+              - "scale legend"
+              - "quantity legend"
+              - "median time legend"
+              - "scale bar scalar (shapes)"
+              - "scale bar scalar (shapes)"
+              - "scale bar scalar (shapes)"
+              - "scale bar scalar (shapes)"
+              - "positive_Cell anisotropy (shapes)"
+              - "negative_Cell anisotropy (shapes)"
+              - "positive_Cell anisotropy (shapes)"
+              - "negative_Cell anisotropy (shapes)"
+              - "median time legend"
+              - "points_data (shapes)"
+          movie:
+            enabled: false
+            path: "movies/CellIaniso.mp4"
+            frames: 22:167:1
+            fps: 10
+            layers:
+              - "outline"
+              - "scale legend"
+              - "quantity legend"
+              - "median time legend"
+              - "scale bar scalar (shapes)"
+              - "scale bar scalar (shapes)"
+              - "scale bar scalar (shapes)"
+              - "scale bar scalar (shapes)"
+              - "positive_Cell anisotropy (shapes)"
+              - "negative_Cell anisotropy (shapes)"
+              - "positive_Cell anisotropy (shapes)"
+              - "negative_Cell anisotropy (shapes)"
+              - "median time legend"
+      spatial_dnA:
+        kind: napari
+        scene: build_spatial_dnA_scene
+        description: "Apoptosis rate spatial map"
+        display: false
+        save: true
+        exports:
+          frame_94:
+            path: "spatial_maps/dnA_f94.svg"
+            frames: 94
+            layers:
+              - "outline"
+              - "scale legend"
+              - "quantity legend"
+              - "median time legend"
+              - "scale bar scalar (shapes)"
+              - "scale bar scalar (shapes)"
+              - "scale bar scalar (shapes)"
+              - "scale bar scalar (shapes)"
+              - "positive_Apoptosis rate (shapes)"
+              - "negative_Apoptosis rate (shapes)"
+              - "positive_Apoptosis rate (shapes)"
+              - "negative_Apoptosis rate (shapes)"
+              - "median time legend"
+              - "points_data (shapes)"
+          frame_146:
+            path: "spatial_maps/dnA_f146.svg"
+            frames: 146
+            layers:
+              - "outline"
+              - "scale legend"
+              - "quantity legend"
+              - "median time legend"
+              - "scale bar scalar (shapes)"
+              - "scale bar scalar (shapes)"
+              - "scale bar scalar (shapes)"
+              - "scale bar scalar (shapes)"
+              - "positive_Apoptosis rate (shapes)"
+              - "negative_Apoptosis rate (shapes)"
+              - "positive_Apoptosis rate (shapes)"
+              - "negative_Apoptosis rate (shapes)"
+              - "median time legend"
+              - "points_data (shapes)"
+          movie:
+            enabled: false
+            path: "movies/dnA.mp4"
+            frames: 22:167:1
+            fps: 10
+            layers:
+              - "outline"
+              - "scale legend"
+              - "quantity legend"
+              - "median time legend"
+              - "scale bar scalar (shapes)"
+              - "scale bar scalar (shapes)"
+              - "scale bar scalar (shapes)"
+              - "scale bar scalar (shapes)"
+              - "positive_Apoptosis rate (shapes)"
+              - "negative_Apoptosis rate (shapes)"
+              - "positive_Apoptosis rate (shapes)"
+              - "negative_Apoptosis rate (shapes)"
+              - "median time legend"
+      spatial_dnD:
+        kind: napari
+        scene: build_spatial_dnD_scene
+        description: "Division rate spatial map"
+        display: false
+        save: true
+        exports:
+          frame_94:
+            path: "spatial_maps/dnD_f94.svg"
+            frames: 94
+            layers:
+              - "outline"
+              - "scale legend"
+              - "quantity legend"
+              - "median time legend"
+              - "scale bar scalar (shapes)"
+              - "scale bar scalar (shapes)"
+              - "scale bar scalar (shapes)"
+              - "scale bar scalar (shapes)"
+              - "positive_Division rate (shapes)"
+              - "negative_Division rate (shapes)"
+              - "positive_Division rate (shapes)"
+              - "negative_Division rate (shapes)"
+              - "median time legend"
+              - "points_data (shapes)"
+          frame_146:
+            path: "spatial_maps/dnD_f146.svg"
+            frames: 146
+            layers:
+              - "outline"
+              - "scale legend"
+              - "quantity legend"
+              - "median time legend"
+              - "scale bar scalar (shapes)"
+              - "scale bar scalar (shapes)"
+              - "scale bar scalar (shapes)"
+              - "scale bar scalar (shapes)"
+              - "positive_Division rate (shapes)"
+              - "negative_Division rate (shapes)"
+              - "positive_Division rate (shapes)"
+              - "negative_Division rate (shapes)"
+              - "median time legend"
+              - "points_data (shapes)"
+          movie:
+            enabled: false
+            path: "movies/dnD.mp4"
+            frames: 22:167:1
+            fps: 10
+            layers:
+              - "outline"
+              - "scale legend"
+              - "quantity legend"
+              - "median time legend"
+              - "scale bar scalar (shapes)"
+              - "scale bar scalar (shapes)"
+              - "scale bar scalar (shapes)"
+              - "scale bar scalar (shapes)"
+              - "positive_Division rate (shapes)"
+              - "negative_Division rate (shapes)"
+              - "positive_Division rate (shapes)"
+              - "negative_Division rate (shapes)"
+              - "median time legend"
+      spatial_EG:
+        kind: napari
+        scene: build_spatial_EG_scene
+        description: "Spatial tensor map of EG (growth contribution)"
+        display: false
+        save: true
+        exports:
+          frame_94:
+            path: "spatial_maps/EG_f94.svg"
+            frames: 94
+            layers:
+              - "outline"
+              - "scale legend"
+              - "quantity legend"
+              - "median time legend"
+              - "scale bar scalar (shapes)"
+              - "scale bar scalar (shapes)"
+              - "scale bar"
+              - "positive_G (shapes)"
+              - "negative_G (shapes)"
+              - "G_positive"
+              - "median time legend"
+              - "points_data (shapes)"
+          frame_146:
+            path: "spatial_maps/EG_f146.svg"
+            frames: 146
+            layers:
+              - "outline"
+              - "scale legend"
+              - "quantity legend"
+              - "median time legend"
+              - "scale bar scalar (shapes)"
+              - "scale bar scalar (shapes)"
+              - "scale bar"
+              - "positive_G (shapes)"
+              - "negative_G (shapes)"
+              - "G_positive"
+              - "median time legend"
+              - "points_data (shapes)"
+          movie:
+            enabled: false
+            path: "movies/EG.mp4"
+            frames: 22:167:1
+            fps: 10
+            layers:
+              - "outline"
+              - "scale legend"
+              - "quantity legend"
+              - "median time legend"
+              - "median time legend"
+              - "scale bar scalar (shapes)"
+              - "scale bar scalar (shapes)"
+              - "scale bar"
+              - "positive_G (shapes)"
+              - "negative_G (shapes)"
+              - "G_positive"
+      spatial_EA:
+        kind: napari
+        scene: build_spatial_EA_scene
+        description: "Spatial tensor map of EA (apoptosis contribution)"
+        display: false
+        save: true
+        exports:
+          frame_94:
+            path: "spatial_maps/EA_f94.svg"
+            frames: 94
+            layers:
+              - "outline"
+              - "scale legend"
+              - "quantity legend"
+              - "median time legend"
+              - "scale bar scalar (shapes)"
+              - "scale bar scalar (shapes)"
+              - "scale bar"
+              - "positive_A (shapes)"
+              - "negative_A (shapes)"
+              - "A_positive"
+              - "median time legend"
+              - "points_data (shapes)"
+          frame_146:
+            path: "spatial_maps/EA_f146.svg"
+            frames: 146
+            layers:
+              - "outline"
+              - "scale legend"
+              - "quantity legend"
+              - "median time legend"
+              - "scale bar scalar (shapes)"
+              - "scale bar scalar (shapes)"
+              - "scale bar"
+              - "positive_A (shapes)"
+              - "negative_A (shapes)"
+              - "A_positive"
+              - "median time legend"
+              - "points_data (shapes)"
+          movie:
+            enabled: false
+            path: "movies/EA.mp4"
+            frames: 22:167:1
+            fps: 10
+            layers:
+              - "outline"
+              - "scale legend"
+              - "quantity legend"
+              - "median time legend"
+              - "scale bar scalar (shapes)"
+              - "scale bar scalar (shapes)"
+              - "scale bar"
+              - "positive_A (shapes)"
+              - "negative_A (shapes)"
+              - "A_positive"
+              - "median time legend"
+      spatial_ED:
+        kind: napari
+        scene: build_spatial_ED_scene
+        description: "Spatial tensor map of ED (division contribution)"
+        display: false
+        save: true
+        exports:
+          frame_94:
+            path: "spatial_maps/ED_f94.svg"
+            frames: 94
+            layers:
+              - "outline"
+              - "scale legend"
+              - "quantity legend"
+              - "median time legend"
+              - "scale bar scalar (shapes)"
+              - "scale bar scalar (shapes)"
+              - "scale bar"
+              - "positive_D (shapes)"
+              - "negative_D (shapes)"
+              - "D_positive"
+              - "median time legend"
+              - "points_data (shapes)"
+          frame_146:
+            path: "spatial_maps/ED_f146.svg"
+            frames: 146
+            layers:
+              - "outline"
+              - "scale legend"
+              - "quantity legend"
+              - "median time legend"
+              - "scale bar scalar (shapes)"
+              - "scale bar scalar (shapes)"
+              - "scale bar"
+              - "positive_D (shapes)"
+              - "negative_D (shapes)"
+              - "D_positive"
+              - "median time legend"
+              - "points_data (shapes)"
+          movie:
+            enabled: false
+            path: "movies/ED.mp4"
+            frames: 22:167:1
+            fps: 10
+            layers:
+              - "outline"
+              - "scale legend"
+              - "quantity legend"
+              - "median time legend"
+              - "scale bar scalar (shapes)"
+              - "scale bar scalar (shapes)"
+              - "scale bar"
+              - "positive_D (shapes)"
+              - "negative_D (shapes)"
+              - "D_positive"
+              - "median time legend"
+      spatial_ES:
+        kind: napari
+        scene: build_spatial_ES_scene
+        description: "Spatial tensor map of ES (shape change contribution)"
+        display: false
+        save: true
+        exports:
+          frame_94:
+            path: "spatial_maps/ES_f94.svg"
+            frames: 94
+            layers:
+              - "outline"
+              - "scale legend"
+              - "quantity legend"
+              - "median time legend"
+              - "scale bar scalar (shapes)"
+              - "scale bar scalar (shapes)"
+              - "scale bar"
+              - "positive_S (shapes)"
+              - "negative_S (shapes)"
+              - "S_positive"
+              - "median time legend"
+              - "points_data (shapes)"
+          frame_146:
+            path: "spatial_maps/ES_f146.svg"
+            frames: 146
+            layers:
+              - "outline"
+              - "scale legend"
+              - "quantity legend"
+              - "median time legend"
+              - "scale bar scalar (shapes)"
+              - "scale bar scalar (shapes)"
+              - "scale bar"
+              - "positive_S (shapes)"
+              - "negative_S (shapes)"
+              - "S_positive"
+              - "median time legend"
+              - "points_data (shapes)"
+          movie:
+            enabled: false
+            path: "movies/ES.mp4"
+            frames: 22:167:1
+            fps: 10
+            layers:
+              - "outline"
+              - "scale legend"
+              - "quantity legend"
+              - "median time legend"
+              - "scale bar scalar (shapes)"
+              - "scale bar scalar (shapes)"
+              - "scale bar"
+              - "positive_S (shapes)"
+              - "negative_S (shapes)"
+              - "S_positive"
+              - "median time legend"
+      spatial_CellArea:
+        kind: napari
+        scene: build_spatial_CellArea_scene
+        description: "Cell area spatial map"
+        display: false
+        save: true
+        exports:
+          frame_94:
+            path: "spatial_maps/CellArea_f94.svg"
+            frames: 94
+            layers:
+              - "outline"
+              - "scale legend"
+              - "quantity legend"
+              - "median time legend"
+              - "scale bar scalar (shapes)"
+              - "scale bar scalar (shapes)"
+              - "scale bar scalar (shapes)"
+              - "scale bar scalar (shapes)"
+              - "positive_Cell area (shapes)"
+              - "negative_Cell area (shapes)"
+              - "positive_Cell area (shapes)"
+              - "negative_Cell area (shapes)"
+              - "median time legend"
+              - "points_data (shapes)"
+          frame_146:
+            path: "spatial_maps/CellArea_f146.svg"
+            frames: 146
+            layers:
+              - "outline"
+              - "scale legend"
+              - "quantity legend"
+              - "median time legend"
+              - "scale bar scalar (shapes)"
+              - "scale bar scalar (shapes)"
+              - "scale bar scalar (shapes)"
+              - "scale bar scalar (shapes)"
+              - "positive_Cell area (shapes)"
+              - "negative_Cell area (shapes)"
+              - "positive_Cell area (shapes)"
+              - "negative_Cell area (shapes)"
+              - "median time legend"
+              - "points_data (shapes)"
+          movie:
+            enabled: false
+            path: "movies/CellArea.mp4"
+            frames: 22:167:1
+            fps: 10
+            layers:
+              - "outline"
+              - "scale legend"
+              - "quantity legend"
+              - "median time legend"
+              - "scale bar scalar (shapes)"
+              - "scale bar scalar (shapes)"
+              - "scale bar scalar (shapes)"
+              - "scale bar scalar (shapes)"
+              - "positive_Cell area (shapes)"
+              - "negative_Cell area (shapes)"
+              - "positive_Cell area (shapes)"
+              - "negative_Cell area (shapes)"
+              - "median time legend"
+      spatial_U:
+        kind: napari
+        scene: build_spatial_U_scene
+        description: "Velocity spatial map (with erosion matching tensorial quantities)"
+        display: false
+        save: true
+        exports:
+          velocity_movie_seg:
+            enabled: false
+            frames: 22:167:1
+            path: "movies/velocity_seg.mp4"
+            fps: 10
+            layers:
+              - "outline"
+              - "scale legend"
+              - "quantity legend"
+              - "median time legend"
+              - "scale bar"
+              - "Velocity"
+              - "median time legend"
+      spatial_Epsilon:
+        kind: napari
+        scene: build_spatial_Epsilon_scene
+        description: "Deformation rate spatial map (with erosion matching tensorial quantities)"
+        display: false
+        save: true
+        exports:
+          deformation_movie_seg:
+            enabled: false
+            frames: 22:167:1
+            path: "movies/deformation_seg.mp4"
+            fps: 10
+            layers:
+              - "outline"
+              - "scale legend"
+              - "quantity legend"
+              - "median time legend"
+              - "scale bar scalar (shapes)"
+              - "positive_Deformation rate (shapes)"
+              - "negative_Deformation rate (shapes)"
+              - "Deformation rate_positive"
+              - "median time legend"
+
+  # =========================================================================
+  # Spatial transcriptome reconstruction  [Fig 3]
+  # =========================================================================
+  figure_spatial_transcriptome:
+    regenerate_benchmark: false
+    benchmark_repeats: 10
+    # optimization_grid: "full" runs the full grid/Optuna searches for every
+    # method: widened novosparc (s down to 2, epsilon 0.01-0.1), ~58 vGEP
+    # cutoffs, 18 perler k values, 150 tangram Optuna trials, and
+    # exhaustive cytospace. Full-mode results land in
+    # data/gep_results/{novosparc,perler,tangram,cytospace}_output.
+    # Set to "test" for a fast smoke run: tiny grids written to separate
+    # *_test/ subdirectories so production caches stay intact.
+    optimization_grid: "full"
+    description: "Spatial transcriptome reconstruction from scRNA-seq using vGEP, benchmarked against Novosparc, PERLER, Tangram and CytoSPACE (GFP reporter atlas, smiFISH/GFP validation)"
+    enabled_panels:
+      umap_cell_types: true
+      marker_genes: true
+      atlas_gene_transforms: true
+      spatial_transcriptome: true
+      validation_correlation_bars: true
+      training_correlation_bars: true
+      reconstruction_comparison_validation: true
+      reconstruction_comparison_training: true
+      vgep_vs_atlas_comparisons: true
+      reconstruction_timing: true
+      cdf_validation: true
+      survival_validation: true
+      cdf_training: true
+      survival_training: true
+      cdf_combined: true
+      survival_combined: true
+      cdf_protein_vs_fish: true
+      survival_protein_vs_fish: true
+
+    output_dir: "fig_spatial_transcriptome"
+    regenerate_cache: false
+    preprocessing:
+      run_atlas_generation: true
+      run_transform_atlas: true
+    outputs:
+      correlation_validation:
+        enabled: true
+        path: "benchmarking/correlation_validation.csv"
+        description: "Per-gene Pearson correlations for validation genes (vGEP, Novosparc, PERLER, Tangram, CytoSPACE)"
+      correlation_training:
+        enabled: true
+        path: "benchmarking/correlation_training.csv"
+        description: "Per-gene Pearson correlations for training genes (vGEP, Novosparc, PERLER, Tangram, CytoSPACE)"
+    panels:
+      # --- UMAP panels ---
+      umap_cell_types:
+        kind: matplotlib
+        description: "UMAP coloured by cell type annotation"
+        exports:
+          default:
+            path: "panel_1"
+        display: false
+      marker_genes:
+        kind: matplotlib
+        description: "UMAPs of marker gene expression (one per gene)"
+        display: false
+      # --- Atlas panels ---
+      atlas_gene_transforms:
+        kind: matplotlib
+        description: "Atlas genes with/without projective transform"
+        display: false
+      # --- Spatial transcriptome ---
+      spatial_transcriptome:
+        kind: matplotlib
+        description: "Additive-blend napari-style spatial transcriptome"
+        exports:
+          default:
+            path: "panel_3"
+        display: false
+      # --- Benchmark panels ---
+      validation_correlation_bars:
+        kind: matplotlib
+        description: "Bar plot of validation gene correlations: vGEP vs Novosparc, PERLER, Tangram, CytoSPACE"
+        exports:
+          default:
+            path: "benchmarking/panel_4a_validation_corr"
+        display: false
+      training_correlation_bars:
+        kind: matplotlib
+        description: "Bar plot of training gene correlations: vGEP vs Novosparc, PERLER, Tangram, CytoSPACE"
+        exports:
+          default:
+            path: "benchmarking/panel_4b_training_corr"
+        display: false
+      reconstruction_comparison_validation:
+        kind: matplotlib
+        description: "Spatial reconstruction grid for validation genes"
+        exports:
+          default:
+            path: "benchmarking/reconstruction_comparison_validation"
+        display: false
+      reconstruction_comparison_training:
+        kind: matplotlib
+        description: "Spatial reconstruction grid for training genes"
+        exports:
+          default:
+            path: "benchmarking/reconstruction_comparison_training"
+        display: false
+      vgep_vs_atlas_comparisons:
+        kind: matplotlib
+        description: "vGEP vs atlas side-by-side for Tollo, ea, spz3, sr"
+        save: true
+        display: false
+      reconstruction_timing:
+        kind: matplotlib
+        description: "Bar chart comparing single-reconstruction compute time (vGEP, Novosparc, PERLER, Tangram, CytoSPACE)"
+        exports:
+          default:
+            path: "benchmarking/reconstruction_timing"
+        display: false
+      # --- CDF / Survival panels ---
+      cdf_validation:
+        kind: matplotlib
+        description: "CDF for validation gene correlations"
+        exports:
+          default:
+            path: "benchmarking/cdf_correlation_validation"
+        display: false
+      survival_validation:
+        kind: matplotlib
+        description: "Survival plot for validation gene correlations"
+        exports:
+          default:
+            path: "benchmarking/survival_correlation_validation"
+        display: false
+      cdf_training:
+        kind: matplotlib
+        description: "CDF for training gene correlations"
+        exports:
+          default:
+            path: "benchmarking/cdf_correlation_training"
+        display: false
+      survival_training:
+        kind: matplotlib
+        description: "Survival plot for training gene correlations"
+        exports:
+          default:
+            path: "benchmarking/survival_correlation_training"
+        display: false
+      cdf_combined:
+        kind: matplotlib
+        description: "CDF combining validation + training gene correlations"
+        exports:
+          default:
+            path: "benchmarking/cdf_correlation_combined"
+        display: false
+      survival_combined:
+        kind: matplotlib
+        description: "Survival combining validation + training gene correlations"
+        exports:
+          default:
+            path: "benchmarking/survival_correlation_combined"
+        display: false
+      cdf_protein_vs_fish:
+        kind: matplotlib
+        description: "CDF comparing Protein vs smiFISH validated genes"
+        exports:
+          default:
+            path: "benchmarking/cdf_protein_vs_fish"
+        display: false
+      survival_protein_vs_fish:
+        kind: matplotlib
+        description: "Survival comparing Protein vs smiFISH validated genes"
+        exports:
+          default:
+            path: "benchmarking/survival_protein_vs_fish"
+        display: false
+
+  # =========================================================================
+  # TF specificity and GRN inference  [Fig 4]
+  # =========================================================================
+  figure_grn:
+    description: "Transcription factor specificity analysis (tau scores) and gene regulatory network inference (SCENIC) across morphodynamic domains"
+    enabled_panels:
+      tf_specificity_heatmap_5: true
+      tf_specificity_heatmap_13: true
+      top_tfs_by_tau: true
+      tau_distribution: true
+      tf_cluster_network: true
+
+    output_dir: "fig_grn"
+    regenerate_cache: false
+    panels:
+      tf_specificity_heatmap_5:
+        kind: matplotlib
+        description: "Clustermap of cluster-specific TF expression (5 morphodynamic domains)"
+        exports:
+          default:
+            path: "tf_specificity_heatmap_5"
+        save: true
+        display: false
+      tf_specificity_heatmap_13:
+        kind: matplotlib
+        description: "Clustermap of cluster-specific TF expression (13 clusters, subset 5/7/9)"
+        exports:
+          default:
+            path: "tf_specificity_heatmap_13"
+        save: true
+        display: false
+      top_tfs_by_tau:
+        kind: matplotlib
+        description: "Bar plot of top 15 TFs ranked by Tau specificity score"
+        exports:
+          default:
+            path: "top_tfs_by_tau"
+        save: true
+        display: false
+      tau_distribution:
+        kind: matplotlib
+        description: "Tau score distribution with Otsu threshold for specificity"
+        exports:
+          default:
+            path: "tau_distribution"
+        save: true
+        display: false
+      tf_cluster_network:
+        kind: matplotlib
+        description: "Bipartite network linking TFs to their assigned morphodynamic domain"
+        exports:
+          default:
+            path: "tf_cluster_network"
+        save: true
+        display: false
+
+  # =========================================================================
+  # Spatial autocorrelation (Moran/LISA)  [Fig 5]
+  # =========================================================================
+  figure_morphodynamics_comparison:
+    description: "Spatial autocorrelation analysis (Moran's I, LISA) of deformation and velocity fields comparing vi (control) vs Toll RNAi"
+    enabled_panels:
+      moran_statistics: true
+      autocorrelation_scatterplot: true
+      moran_colorbars: true
+      save_lisa_maps: true
+      contraction_analysis: true
+      velocity_analysis: true
+      velocity_amplitude: true
+      rearrangement_anisotropy: true
+      cell_shape_trace: true
+      cell_shape_anisotropy: true
+      apoptosis_rate: true
+      deformation_vi: true
+      deformation_tolloi: true
+      deformation_difference: true
+      velocity_vi: true
+      velocity_tolloi: true
+      velocity_difference: true
+
+    output_dir: "fig_morphodynamics_comparison"
+    masks:
+      - {center: [-10.8, 461.3], radius: 100}
+      - {center: [-15.7, 667.0], radius: 100}
+      - {center: [-21.6, 854.0], radius: 100}
+      - {center: [-18.6, 1068.5], radius: 100}
+      - {center: [-16.7, 1256.4], radius: 100}
+      - {center: [-14.7, 1466.0], radius: 100}
+      - {center: [-13.7, 1608.7], radius: 100}
+      - {center: [-13.7, 1709.1], radius: 100}
+      - {center: [-15.7, 1863.6], radius: 100}
+      - {center: [-17.6, 1994.5], radius: 100}
+      - {center: [-15.7, 2141.1], radius: 100}
+      - {center: [-15.7, 2331.0], radius: 100}
+      - {center: [-19.6, 2539.6], radius: 100}
+      - {center: [-17.6, 2724.6], radius: 100}
+      - {center: [-19.6, 2918.5], radius: 100}
+      - {center: [-23.6, 3073.0], radius: 100}
+      - {center: [-17.6, 3173.4], radius: 100}
+      - {center: [-19.6, 3309.2], radius: 100}
+      - {center: [-19.6, 3429.2], radius: 100}
+      - {center: [783.9, 2411.5], radius: 100, frames: [52, 53]}
+      - {center: [1468.9, 2709], radius: 100, frames: [95, 96]} 
+    pick_masks: false  # Set true to enable interactive mask picker (press 'E' to export)
+    thresholds:
+      pval_threshold_roi: 0.05
+      contraction_threshold: -0.02
+      roi_component_deformation: "largest"
+      roi_component_velocity: "largest"
+    cache:
+      use_moran_cache: true
+      regenerate_cache: false
+    panels:
+      # --- Moran statistics (matplotlib) ---
+      moran_statistics:
+        kind: matplotlib
+        description: "Moran's I time-series for deformation rate and velocity"
+        display: false
+        save: true
+      autocorrelation_scatterplot:
+        kind: matplotlib
+        description: "Moran scatterplots at peak Moran index"
+        exports:
+          default:
+            path: "moran_plots/autocorrelation_scatterplot"
+        display: false
+        save: true
+      moran_colorbars:
+        kind: matplotlib
+        description: "Diverging colorbar legends for LISA maps"
+        display: false
+        save: true
+      save_lisa_maps:
+        kind: matplotlib
+        save: true
+        display: false
+        description: "Save LISA maps and p-values to disk"
+      # --- Comparison plots (matplotlib) ---
+      contraction_analysis:
+        kind: matplotlib
+        description: "Contraction rate comparison vi vs Tolloi"
+        exports:
+          default:
+            path: "comparisons/contraction_rates_comparison"
+        display: false
+        save: true
+      velocity_analysis:
+        kind: matplotlib
+        description: "Velocity vector polar plot (vi vs Tolloi)"
+        exports:
+          default:
+            path: "comparisons/velocity_vectors_comparison"
+        display: false
+        save: true
+      velocity_amplitude:
+        kind: matplotlib
+        description: "Velocity amplitude comparison (barplot)"
+        exports:
+          default:
+            path: "comparisons/velocity_amplitude_comparison"
+        display: false
+        save: true
+      # --- Lagrangian barplots (velocity ROI, matplotlib) ---
+      rearrangement_anisotropy:
+        kind: matplotlib
+        description: "Cell rearrangement anisotropy (ER eigenvalue difference) in velocity ROI (vi vs Tolloi)"
+        exports:
+          default:
+            path: "comparisons/rearrangement_anisotropy_comparison"
+        display: false
+        save: true
+      cell_shape_trace:
+        kind: matplotlib
+        description: "Cell shape trace in velocity ROI (vi vs Tolloi)"
+        exports:
+          default:
+            path: "comparisons/cell_shape_trace_comparison"
+        display: false
+        save: true
+      cell_shape_anisotropy:
+        kind: matplotlib
+        description: "Cell shape anisotropy (ES eigenvalue difference) in velocity ROI (vi vs Tolloi)"
+        exports:
+          default:
+            path: "comparisons/cell_shape_anisotropy_comparison"
+        display: false
+        save: true
+      apoptosis_rate:
+        kind: matplotlib
+        description: "Apoptosis rate (dnA/nCoreRNs) in velocity ROI (vi vs Tolloi)"
+        exports:
+          default:
+            path: "comparisons/apoptosis_rate_comparison"
+        display: false
+        save: true
+      # --- Deformation maps (napari) ---
+      deformation_vi:
+        kind: napari
+        scene: build_deformation_vi_scene
+        description: "Vi control deformation tensor field"
+        display: false
+        save: true
+        exports:
+          main:
+            path: "spatial_maps/deformation_vi.svg"
+            layers:
+              - "Tissue Outlines"
+              - "scale legend"
+              - "quantity legend"
+              - "median time legend"
+              - "scale bar scalar (shapes)"
+              - "scale bar scalar (shapes)"
+              - "positive_Deformation rate (Control) (shapes)"
+              - "negative_Deformation rate (Control) (shapes)"
+              - "median time legend"
+              - "points_data (shapes)"
+          movie:
+            enabled: false
+            path: "movies/deformation_vi.mp4"
+            frames: 71:166:1
+            fps: 10
+            layers:
+              - "Tissue Outlines"
+              - "scale legend"
+              - "quantity legend"
+              - "median time legend"
+              - "scale bar scalar (shapes)"
+              - "scale bar scalar (shapes)"
+              - "positive_Deformation rate (Control) (shapes)"
+              - "negative_Deformation rate (Control) (shapes)"
+              - "median time legend"
+      deformation_tolloi:
+        kind: napari
+        scene: build_deformation_tolloi_scene
+        description: "Tolloi deformation tensor field"
+        display: false
+        save: true
+        exports:
+          main:
+            path: "spatial_maps/deformation_tolloi.svg"
+            layers:
+              - "Tissue Outlines"
+              - "scale legend"
+              - "quantity legend"
+              - "median time legend"
+              - "scale bar scalar (shapes)"
+              - "scale bar scalar (shapes)"
+              - "positive_Deformation rate (TolloRNAi) (shapes)"
+              - "negative_Deformation rate (TolloRNAi) (shapes)"
+              - "median time legend"
+              - "points_data (shapes)"
+          movie:
+            enabled: false
+            path: "movies/deformation_tolloi.mp4"
+            frames: 71:166:1
+            fps: 10
+            layers:
+              - "Tissue Outlines"
+              - "scale legend"
+              - "quantity legend"
+              - "median time legend"
+              - "scale bar scalar (shapes)"
+              - "scale bar scalar (shapes)"
+              - "positive_Deformation rate (TolloRNAi) (shapes)"
+              - "negative_Deformation rate (TolloRNAi) (shapes)"
+              - "median time legend"
+      deformation_difference:
+        kind: napari
+        scene: build_deformation_difference_scene
+        description: "Deformation difference with LISA overlays"
+        display: false
+        save: true
+        exports:
+          deformation_difference_moran:
+            path: "spatial_maps/deformation_difference_moran.svg"
+            layers:
+              - "Tissue Outlines"
+              - "epsilon_lower_iso_value"
+              - "epsilon_higher_iso_value"
+              - "scale legend"
+              - "quantity legend"
+              - "median time legend"
+              - "scale bar scalar (shapes)"
+              - "scale bar scalar (shapes)"
+              - "positive_Deformation rate difference (shapes)"
+              - "negative_Deformation rate difference (shapes)"
+              - "median time legend"
+              - "Contraction ROI"
+              - "Restrictive Contraction ROI"
+              - "points_data (shapes)"
+          deformation_difference_moran_png:
+            path: "spatial_maps/deformation_difference_moran.png"
+            layers:
+              - "Tissue Outlines"
+              - "epsilon_lower_iso_value"
+              - "epsilon_higher_iso_value"
+              - "scale legend"
+              - "quantity legend"
+              - "median time legend"
+              - "scale bar scalar (shapes)"
+              - "scale bar scalar (shapes)"
+              - "positive_Deformation rate difference (shapes)"
+              - "negative_Deformation rate difference (shapes)"
+              - "median time legend"
+              - "Contraction ROI"
+              - "Restrictive Contraction ROI"
+              - "points_data (shapes)"
+          movie:
+            enabled: false
+            path: "movies/deformation_difference.mp4"
+            frames: 71:166:1
+            fps: 10
+            layers:
+              - "Tissue Outlines"
+              - "epsilon_lower_iso_value"
+              - "epsilon_higher_iso_value"
+              - "scale legend"
+              - "quantity legend"
+              - "median time legend"
+              - "scale bar scalar (shapes)"
+              - "scale bar scalar (shapes)"
+              - "positive_Deformation rate difference (shapes)"
+              - "negative_Deformation rate difference (shapes)"
+              - "median time legend"
+          atlas_tollo_on_moran:
+            path: "spatial_maps/atlas_tollo_on_moran_deformation.svg"
+            enabled: true
+            layers: ["Tissue Outlines", "Atlas Tollo Expression",
+                     "Contraction ROI", "Restrictive Contraction ROI",
+                     "points_data (shapes)"]
+          clusters_on_moran:
+            path: "spatial_maps/clusters_on_moran_deformation.svg"
+            enabled: true
+            layers: ["Tissue Outlines", "Morphogenetic Clusters",
+                     "Contraction ROI", "Restrictive Contraction ROI",
+                     "points_data (shapes)"]
+          atlas_tollo_movie:
+            enabled: false
+            path: "movies/atlas_tollo_on_deformation_difference.mp4"
+            frames: 71:166:1
+            fps: 10
+            layers:
+              - "Tissue Outlines"
+              - "Atlas Tollo Expression"
+              - "scale legend"
+              - "quantity legend"
+              - "median time legend"
+              - "scale bar scalar (shapes)"
+              - "scale bar scalar (shapes)"
+              - "positive_Deformation rate difference (shapes)"
+              - "negative_Deformation rate difference (shapes)"
+              - "median time legend"
+          clusters_movie:
+            enabled: false
+            path: "movies/clusters_on_deformation_difference.mp4"
+            frames: 71:166:1
+            fps: 10
+            layers:
+              - "Tissue Outlines"
+              - "Morphogenetic Clusters"
+              - "scale legend"
+              - "quantity legend"
+              - "median time legend"
+              - "scale bar scalar (shapes)"
+              - "scale bar scalar (shapes)"
+              - "positive_Deformation rate difference (shapes)"
+              - "negative_Deformation rate difference (shapes)"
+              - "median time legend"
+      # --- Velocity maps (napari) ---
+      velocity_vi:
+        kind: napari
+        scene: build_velocity_vi_scene
+        description: "Vi control velocity field"
+        display: false
+        save: true
+        exports:
+          main:
+            path: "spatial_maps/velocity_vi.svg"
+            layers:
+              - "Tissue Outlines"
+              - "scale legend"
+              - "quantity legend"
+              - "median time legend"
+              - "scale bar"
+              - "Velocity (Control)"
+              - "median time legend"
+              - "points_data (shapes)"
+          movie:
+            enabled: false
+            path: "movies/velocity_vi.mp4"
+            frames: 71:166:1
+            fps: 10
+            layers:
+              - "Tissue Outlines"
+              - "scale legend"
+              - "quantity legend"
+              - "median time legend"
+              - "scale bar"
+              - "Velocity (Control)"
+              - "median time legend"
+      velocity_tolloi:
+        kind: napari
+        scene: build_velocity_tolloi_scene
+        description: "Tolloi velocity field"
+        display: false
+        save: true
+        exports:
+          main:
+            path: "spatial_maps/velocity_tolloi.svg"
+            layers:
+              - "Tissue Outlines"
+              - "scale legend"
+              - "quantity legend"
+              - "median time legend"
+              - "scale bar"
+              - "Velocity (TolloRNAi)"
+              - "median time legend"
+              - "points_data (shapes)"
+          movie:
+            enabled: false
+            path: "movies/velocity_tolloi.mp4"
+            frames: 71:166:1
+            fps: 10
+            layers:
+              - "Tissue Outlines"
+              - "scale legend"
+              - "quantity legend"
+              - "median time legend"
+              - "scale bar"
+              - "Velocity (TolloRNAi)"
+              - "median time legend"
+      velocity_difference:
+        kind: napari
+        scene: build_velocity_difference_scene
+        description: "Velocity difference with LISA overlays"
+        display: false
+        save: true
+        exports:
+          velocity_difference_moran:
+            path: "spatial_maps/velocity_difference_moran.svg"
+            layers:
+              - "Tissue Outlines"
+              - "u_higher_iso_value"
+              - "u_lower_iso_value"
+              - "scale legend"
+              - "quantity legend"
+              - "median time legend"
+              - "scale bar"
+              - "Velocity difference"
+              - "median time legend"
+              - "points_data (shapes)"
+          velocity_difference_moran_png:
+            path: "spatial_maps/velocity_difference_moran.png"
+            layers:
+              - "Tissue Outlines"
+              - "u_higher_iso_value"
+              - "u_lower_iso_value"
+              - "scale legend"
+              - "quantity legend"
+              - "median time legend"
+              - "scale bar"
+              - "Velocity difference"
+              - "median time legend"
+              - "points_data (shapes)"
+          movie:
+            enabled: false
+            path: "movies/velocity_difference.mp4"
+            frames: 71:166:1
+            fps: 10
+            layers:
+              - "Tissue Outlines"
+              - "u_higher_iso_value"
+              - "u_lower_iso_value"
+              - "scale legend"
+              - "quantity legend"
+              - "median time legend"
+              - "scale bar"
+              - "Velocity difference"
+              - "median time legend"
+          atlas_tollo_on_moran:
+            path: "spatial_maps/atlas_tollo_on_moran_velocity.svg"
+            enabled: true
+            layers: ["Tissue Outlines", "Atlas Tollo Expression",
+                     "Flow ROI", "points_data (shapes)"]
+          clusters_on_moran:
+            path: "spatial_maps/clusters_on_moran_velocity.svg"
+            enabled: true
+            layers: ["Tissue Outlines", "Morphogenetic Clusters",
+                     "Flow ROI", "points_data (shapes)"]
+          atlas_tollo_movie:
+            enabled: false
+            path: "movies/atlas_tollo_on_velocity_difference.mp4"
+            frames: 71:166:1
+            fps: 10
+            layers:
+              - "Tissue Outlines"
+              - "Atlas Tollo Expression"
+              - "scale legend"
+              - "quantity legend"
+              - "median time legend"
+              - "scale bar"
+              - "Velocity difference"
+              - "median time legend"
+          clusters_movie:
+            enabled: false
+            path: "movies/clusters_on_velocity_difference.mp4"
+            frames: 71:166:1
+            fps: 10
+            layers:
+              - "Tissue Outlines"
+              - "Morphogenetic Clusters"
+              - "scale legend"
+              - "quantity legend"
+              - "median time legend"
+              - "scale bar"
+              - "Velocity difference"
+              - "median time legend"
+
+  # =========================================================================
+  # Apoptosis and compression (Lagrangian)  [Fig 5]
+  # =========================================================================
+  figure_apoptosis_compression:
+    description: "Tensor quantity timeseries in LISA-defined ROIs (compression, compression_restrictive, flow), Lagrangian frame"
+    enabled_panels:
+      plot_instantaneous: true
+      plot_cumulative: true
+      correlation_mean: true
+
+    output_dir: "fig_apoptosis_compression"
+    comparison_cache_dir: "fig_morphodynamics_comparison/cache"
+
+    rois:
+      compression:
+        indices_key: "indices_moran"
+        path: "rates/compression"
+      compression_restrictive:
+        indices_key: "indices"
+        path: "rates/compression_restrictive"
+      flow:
+        indices_key: "indices_flow"
+        path: "rates/flow"
+
+    panels:
+      plot_instantaneous:
+        kind: matplotlib
+        description: "Instantaneous rates for tensor quantities in ROI"
+      plot_cumulative:
+        kind: matplotlib
+        description: "Cumulative rates for tensor quantities in ROI"
+      correlation_mean:
+        kind: matplotlib
+        description: "Apoptosis-compression correlation (per-condition, ROI)"
+        exports:
+          roi:
+            path: "correlations/compression_apoptosis_roi"
+
+  # =========================================================================
+  # Delamination analysis: Lagrangian apoptosis quantification  [Fig 5]
+  # =========================================================================
+  figure_delamination_analysis:
+    description: "Cumulative and 2h-average apoptosis rates (vi vs Tollo RNAi) from the pre-generated Lagrangian averaged stores"
+    enabled_panels:
+      cumulative_apoptosis: true
+      apoptosis_2h_rate: true
+
+    output_dir: "fig_delamination_analysis"
+    # Input zarr paths resolved from the top-level paths: section
+    #   (AVERAGES_PYAP_TOLLOI, AVERAGES_PYAP_VI)
+
+    panels:
+      cumulative_apoptosis:
+        kind: matplotlib
+        description: "Cumulative normalized apoptosis (vi vs Tolloi, grid mean)"
+      apoptosis_2h_rate:
+        kind: matplotlib
+        description: "2h average normalized apoptosis rate (vi vs Tolloi, grid mean)"
+
+  # =========================================================================
+  # Tollo:GFP fluorescence: Registered images with ROI overlays
+  # =========================================================================
+  figure_tollo_gfp:
+    description: "Tollo:GFP images at 4 timepoints with flow/compression ROI overlays"
+    output_dir: "fig_tollo_gfp"
+    gfp_channel: 1                    # Channel index: 0=ECad, 1=TolloGFP
+    grid_type: "eulerian"
+    roi_names: ["flow", "extended_compression", "restrictive_compression"]
+    enabled_panels:
+      tollo_gfp_15h: true
+      tollo_gfp_20h: true
+      tollo_gfp_25h: true
+      tollo_gfp_28h: true
+    panels:
+      tollo_gfp_15h:
+        kind: napari
+        scene: build_tollo_gfp_scene
+        description: "Tollo:GFP at 15h APF with ROI overlays"
+        display: false
+        save: true
+        exports:
+          gfp_15h:
+            frames: 900    # world coord for 15h APF (step 54)
+            path: "tollo_gfp_15h.svg"
+            layers:
+              - "TolloGFP - Transformed TolloGFP_15h.zarr"
+              - "ECad - Transformed TolloGFP_15h.zarr"
+              - "ROI flow (15h APF)"
+              - "ROI extended_compression (15h APF)"
+              - "ROI restrictive_compression (15h APF)"
+              - "ROI flow grid (15h APF)"
+              - "ROI extended_compression grid (15h APF)"
+              - "ROI restrictive_compression grid (15h APF)"
+      tollo_gfp_20h:
+        kind: napari
+        scene: build_tollo_gfp_scene
+        description: "Tollo:GFP at 20h APF with ROI overlays"
+        display: false
+        save: true
+        exports:
+          gfp_20h:
+            frames: 1200   # world coord for 20h APF (step 114)
+            path: "tollo_gfp_20h.svg"
+            layers:
+              - "TolloGFP - Transformed TolloGFP_20h.zarr"
+              - "ECad - Transformed TolloGFP_20h.zarr"
+              - "ROI flow (20h APF)"
+              - "ROI extended_compression (20h APF)"
+              - "ROI restrictive_compression (20h APF)"
+              - "ROI flow grid (20h APF)"
+              - "ROI extended_compression grid (20h APF)"
+              - "ROI restrictive_compression grid (20h APF)"
+      tollo_gfp_25h:
+        kind: napari
+        scene: build_tollo_gfp_scene
+        description: "Tollo:GFP at 25h APF with ROI overlays"
+        display: false
+        save: true
+        exports:
+          gfp_25h:
+            frames: 1500   # world coord for 25h APF (step 174)
+            path: "tollo_gfp_25h.svg"
+            layers:
+              - "TolloGFP - Transformed TolloGFP_25h.zarr"
+              - "ECad - Transformed TolloGFP_25h.zarr"
+              - "ROI flow (25h APF)"
+              - "ROI extended_compression (25h APF)"
+              - "ROI restrictive_compression (25h APF)"
+              - "ROI flow grid (25h APF)"
+              - "ROI extended_compression grid (25h APF)"
+              - "ROI restrictive_compression grid (25h APF)"
+      tollo_gfp_28h:
+        kind: napari
+        scene: build_tollo_gfp_scene
+        description: "Tollo:GFP at 28h APF with ROI overlays"
+        display: false
+        save: true
+        exports:
+          gfp_28h:
+            frames: 1680   # world coord for 28h APF (step 210)
+            path: "tollo_gfp_28h.svg"
+            layers:
+              - "TolloGFP - Transformed TolloGFP_28h.zarr"
+              - "ECad - Transformed TolloGFP_28h.zarr"
+              - "ROI flow (28h APF)"
+              - "ROI extended_compression (28h APF)"
+              - "ROI restrictive_compression (28h APF)"
+              - "ROI flow grid (28h APF)"
+              - "ROI extended_compression grid (28h APF)"
+              - "ROI restrictive_compression grid (28h APF)"
+
+  # =========================================================================
+  # Clustering stability: consensus matrices vs number of PCA components
+  # =========================================================================
+  figure_clustering_stability:
+    description: "Stability of the 5-cluster morphogenetic partition to the number of PCA components: consensus matrices (PCs 2-30 and 10-20), ARI vs the reference 14-PC clustering, and per-bin stability maps"
+    output_dir: "fig_clustering_stability"
+    regenerate_cache: false
+    enabled_panels:
+      consensus_matrix_pcs_2_30: true
+      consensus_matrix_pcs_10_20: true
+      ari_vs_npcs: true
+      stability_map_pcs_2_30: true
+      stability_map_pcs_10_20: true
+      cluster_maps_per_pc: true
+    panels:
+      consensus_matrix_pcs_2_30:
+        kind: matplotlib
+        description: "Consensus matrix over PCs 2-30"
+        exports:
+          default:
+            path: "consensus/consensus_matrix_pcs_2_30"
+        display: false
+      consensus_matrix_pcs_10_20:
+        kind: matplotlib
+        description: "Consensus matrix over PCs 10-20"
+        exports:
+          default:
+            path: "consensus/consensus_matrix_pcs_10_20"
+        display: false
+      ari_vs_npcs:
+        kind: matplotlib
+        description: "ARI of each per-#PC partition vs the reference 5-cluster"
+        exports:
+          default:
+            path: "stability/ari_vs_npcs"
+        display: false
+      stability_map_pcs_2_30:
+        kind: matplotlib
+        description: "Per-bin stability spatial map over PCs 2-30"
+        exports:
+          default:
+            path: "stability/stability_map_pcs_2_30"
+        display: false
+      stability_map_pcs_10_20:
+        kind: matplotlib
+        description: "Per-bin stability spatial map over PCs 10-20"
+        exports:
+          default:
+            path: "stability/stability_map_pcs_10_20"
+        display: false
+      cluster_maps_per_pc:
+        kind: matplotlib
+        description: "Spatial 5-cluster map for each #PCs (colours aligned to the reference partition)"
+        display: false
+
+  figure_clustering_temporal:
+    description: "Robustness of the 5-cluster morphogenetic partition to time pooling: the full pipeline run independently on each single 4h window (early 18-22, late 22-26 hAPF) plus the pooled partition, all cut at the reference k=5, with per-period cluster maps, property heatmaps and a pairwise ARI matrix"
+    output_dir: "fig_clustering_temporal"
+    regenerate_cache: false
+    enabled_panels:
+      cluster_map_early: true
+      cluster_map_late: true
+      cluster_map_pooled: true
+      heatmap_early: true
+      heatmap_late: true
+      ari_matrix: true
+    panels:
+      cluster_map_early:
+        kind: matplotlib
+        description: "5-cluster map for the early period (18-22 hAPF)"
+        exports:
+          default:
+            path: "maps/cluster_map_early"
+        display: false
+      cluster_map_late:
+        kind: matplotlib
+        description: "5-cluster map for the late period (22-26 hAPF)"
+        exports:
+          default:
+            path: "maps/cluster_map_late"
+        display: false
+      cluster_map_pooled:
+        kind: matplotlib
+        description: "5-cluster map for the reference pooled partition (18-26 hAPF)"
+        exports:
+          default:
+            path: "maps/cluster_map_pooled"
+        display: false
+      heatmap_early:
+        kind: matplotlib
+        description: "Per-property z-scored cluster heatmap, early period (18-22 hAPF)"
+        exports:
+          default:
+            path: "heatmaps/heatmap_early"
+        display: false
+      heatmap_late:
+        kind: matplotlib
+        description: "Per-property z-scored cluster heatmap, late period (22-26 hAPF)"
+        exports:
+          default:
+            path: "heatmaps/heatmap_late"
+        display: false
+      ari_matrix:
+        kind: matplotlib
+        description: "Pairwise ARI between the three period partitions"
+        exports:
+          default:
+            path: "similarity/ari_matrix"
+        display: false
+
+  # =========================================================================
+  # Spatio-temporal clustering: domains contiguous in space AND time
+  # =========================================================================
+  figure_clustering_spatiotemporal:
+    description: "Ward clustering of (spatial bin, time frame) observations under a connectivity graph carrying both spatial and temporal edges, over the 45 unique 4h windows with centres 19h58-24h03 hAPF, with the pieces of a domain below 3 bins dissolved within each frame: domain movie, stills, per-bin persistence, the modal domain map and the silhouette sweep"
+    output_dir: "fig_clustering_spatiotemporal"
+    regenerate_cache: false
+    # Domains for the space-time cut. The pooled reference it is compared against is
+    # always 5, so beyond 5 the extra domains have no reference counterpart.
+    n_clusters: 5
+    n_stills: 3
+    enabled_panels:
+      domain_movie: true
+      domain_tiff: true
+      domain_stills: true
+      domain_stills_column: true
+      agreement_vs_pooled: true
+      agreement_identity: true
+      persistence_map: true
+      temporal_stability_map: true
+      modal_domain_map: true
+      silhouette_spacetime: true
+    panels:
+      silhouette_spacetime:
+        kind: matplotlib
+        description: "Silhouette score vs number of domains for the space-time cut, before and after removing isolated bins"
+        display: false
+      agreement_vs_pooled:
+        kind: matplotlib
+        description: "Bins x time matrix of agreement with the pooled partition, with per-frame ARI"
+        display: false
+      agreement_identity:
+        kind: matplotlib
+        description: "Bins x time matrix of domain identity alone, no ARI curve"
+        display: false
+      domain_movie:
+        kind: matplotlib
+        description: "mp4 of the space-time domains across the 45 retained 4h windows"
+        display: false
+      domain_tiff:
+        kind: matplotlib
+        description: "The movie frames as one multi-page TIFF stack (lossless, ImageJ-readable)"
+        display: false
+      domain_stills:
+        kind: matplotlib
+        description: "Standalone SVG domain maps at evenly spaced timepoints"
+        display: false
+      domain_stills_column:
+        kind: matplotlib
+        description: "First/middle/last timepoint stacked in one column as a single panel"
+        display: false
+      persistence_map:
+        kind: matplotlib
+        description: "Per-bin fraction of frames spent in its modal domain"
+        display: false
+      temporal_stability_map:
+        kind: matplotlib
+        description: "Per-bin co-clustering with its own domain across the windows"
+        display: false
+      modal_domain_map:
+        kind: matplotlib
+        description: "Per-bin modal domain, for comparison with the reference partition"
+        display: false
+
+  # =========================================================================
+  # vGEP reconstruction quality vs. atlas size
+  # =========================================================================
+  figure_atlas_size:
+    description: "Sensitivity of the vGEP spatial reconstruction to the number of atlas genes: random k-gene atlases drawn from the 24 curated training genes and from the same pool extended with stan, yrt and Tollo, each scored on the fixed 20-gene validation set at the reference cutoff, plus per-gene leave-one-out reconstruction quality"
+    output_dir: "fig_atlas_size"
+    regenerate_cache: false
+    n_workers: 12
+    enabled_panels:
+      saturation_curves: true
+      sampling_check: true
+      per_gene_loo: true
+    panels:
+      sampling_check:
+        kind: matplotlib
+        description: "Quality vs atlas size, comparing the spread over 50 random atlases with the spread over every atlas of that size (the sizes small enough to enumerate)"
+        exports:
+          default:
+            path: "sampling_check"
+        display: false
+      saturation_curves:
+        kind: matplotlib
+        description: "Validation reconstruction quality vs. atlas size; 24 curated genes alone and extended with stan, yrt and Tollo, on one axis"
+        exports:
+          default:
+            path: "saturation_curves"
+        display: false
+      per_gene_loo:
+        kind: matplotlib
+        description: "Per-gene leave-one-out reconstruction quality (atlas = other 43 genes)"
+        exports:
+          default:
+            path: "per_gene_loo"
+        display: false
+
+  figure_gene_atlas:
+    description: "Common-frame gene atlas: archetype -> diagonal rescale (as in the MATLAB pipeline) (xy scaling + translation, no rotation) -> per-box GEP (analyze_labels eulerian) -> per-gene AOA, all on pyanimalprocessing"
+    output_dir: "fig_gene_atlas"
+    pipeline:
+      overwrite: false            # rebuild archetype/grid/GEP/AOA (augments atlas zarrs in place)
+      genes: null                 # null = all atlas genes; or a list to restrict
+      max_animals_per_gene: null  # null = all; small int for quick tests
+      boxsize: [40, 40]
+      overlap: 0.5
+      render_genes: null          # null = all genes in the cache
+    enabled_panels:
+      gene_atlas_maps: true
+    panels:
+      gene_atlas_maps:
+        kind: matplotlib
+        description: "Per-gene AOA gene-expression maps on the common archetype grid"
+        exports:
+          default:
+            path: "gene_atlas_maps"
+        display: false
+
+  figure_neck_archetype_spread:
+    description: "What the neck landmark is worth to the atlas: the correlation between the gene atlas built with and without the neck in the fit"
+    output_dir: "fig_neck_archetype_spread"
+    pipeline:
+      overwrite: false            # recompute the projected neck positions
+      rebuild_atlases: false      # rebuild both gene atlases (~1 h over 279 animals)
+      n_jobs: 4                   # processes for the per-animal rescale + expression measurement
+    enabled_panels:
+      agreement_by_gene: true
+      agreement_distributions: true
+      agreement_map: true
+      atlas_statistics: true
+    panels:
+      agreement_map:
+        kind: matplotlib
+        description: "Per-box agreement of the two atlases over the tissue, with the macrochaetae and the mean neck drawn on top"
+        exports:
+          default:
+            path: "agreement_map"
+        display: false
+      agreement_by_gene:
+        kind: matplotlib
+        description: "Each gene's neck effect beside the floor set by rebuilding its map from half the animals"
+        exports:
+          default:
+            path: "agreement_by_gene"
+        display: false
+      agreement_distributions:
+        kind: matplotlib
+        description: "The neck effect and the animal-resampling floor as distributions over the genes where both are defined"
+        exports:
+          default:
+            path: "agreement_distributions"
+        display: false
+      atlas_statistics:
+        kind: matplotlib
+        description: "Writes every number behind the agreement panels to atlas_statistics.txt (self-managed, renders no figure)"
+        display: false

@@ -1,0 +1,39 @@
+/* Bellaiche Lab — shared documentation CSS */
+
+/* Sidebar: slightly wider for long module names */
+:root {
+    --pst-sidebar-primary: 280px;
+    --logo-version: "v0.9.0";
+}
+
+/* Navbar brand: render version as a small, dim second line below the title */
+.navbar-brand.logo .logo__title {
+    line-height: 1.15;
+}
+.navbar-brand.logo .logo__title::after {
+    content: var(--logo-version, "");
+    display: block;
+    font-size: 0.72em;
+    font-weight: 400;
+    opacity: 0.55;
+    letter-spacing: 0.02em;
+}
+
+/* API pages: highlight function/class headers */
+dl.py.function > dt,
+dl.py.method > dt,
+dl.py.class > dt {
+    padding: 0.3rem 0.5rem;
+    background-color: var(--pst-color-surface);
+    border-left: 3px solid var(--pst-color-primary);
+}
+
+/* Parameter lists: bolder labels */
+dl.field-list > dt {
+    font-weight: 600;
+}
+
+/* Images: constrain width */
+img {
+    max-width: 100%;
+}
